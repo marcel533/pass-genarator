@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Passwort- & Benutzername-Generator</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #07070b;
+    --card: rgba(255,255,255,0.035);
+    --border: rgba(255,255,255,0.10);
+    --text: #eceaf6;
+    --muted: #9a97ad;
+    --a1: #8b7bff;
+    --a2: #3ee6b5;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text); font: 14px/1.5 var(--sans);
+    background:
+      radial-gradient(900px 500px at 12% -10%, rgba(139,123,255,0.16), transparent 60%),
+      radial-gradient(800px 500px at 100% 0%, rgba(62,230,181,0.10), transparent 60%),
+      var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  .bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .wrap { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+  h1 { margin: 0; font-size: clamp(22px, 4vw, 32px); font-weight: 800; letter-spacing: -0.02em; }
+  .shiny {
+    background: linear-gradient(110deg, #8f8ca8 35%, #ffffff 50%, #8f8ca8 65%);
+    background-size: 220% 100%; -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: shine 4s linear infinite;
+  }
+  @keyframes shine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+  .sub { margin: 6px 0 0; color: var(--muted); }
+  .sub .w { display: inline-block; white-space: pre; }
+
+  .lang { display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; flex: none; background: var(--card); }
+  .lang button { background: none; border: 0; color: var(--muted); font: 600 12px var(--sans); padding: 6px 12px; cursor: pointer; }
+  .lang button[aria-pressed="true"] { color: #07070b; background: linear-gradient(90deg, var(--a1), var(--a2)); }
+
+  .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .grid { grid-template-columns: 400px 1fr; align-items: start; } }
+  .col { display: grid; gap: 16px; min-width: 0; }
+
+  .card {
+    position: relative; overflow: hidden; min-width: 0;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(139,123,255,0.16), transparent 60%);
+  }
+  .card:hover::before { opacity: 1; }
+  .card > * { position: relative; }
+  h2 { margin: 0 0 14px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+  .head h2 { margin: 0; }
+
+  .tabs { position: relative; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border: 1px solid var(--border); border-radius: 12px; padding: 3px; margin-bottom: 18px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-ind { position: absolute; top: 3px; bottom: 3px; left: 0; width: 0; border-radius: 9px; pointer-events: none;
+    background: linear-gradient(90deg, rgba(139,123,255,0.35), rgba(62,230,181,0.25)); border: 1px solid rgba(255,255,255,0.14); }
+  .tab { position: relative; flex: 1 0 auto; background: none; border: 0; color: var(--muted); font: 600 12.5px var(--sans); padding: 8px 10px; cursor: pointer; border-radius: 9px; white-space: nowrap; }
+  .tab[aria-selected="true"] { color: var(--text); }
+
+  .field { margin-bottom: 14px; }
+  .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .row label, .lbl { font-size: 13px; }
+  .val { font: 600 13px var(--mono); color: var(--a2); }
+  input[type="range"] { width: 100%; margin: 0; accent-color: var(--a1); cursor: pointer; }
+  .checks { display: grid; gap: 9px; margin-bottom: 14px; }
+  .check { display: flex; align-items: center; gap: 9px; font-size: 13px; cursor: pointer; }
+  .check input { width: 15px; height: 15px; margin: 0; accent-color: var(--a1); cursor: pointer; }
+  select, input[type="text"], input[type="password"] {
+    width: 100%; margin-top: 6px; background: rgba(0,0,0,0.35); color: var(--text); border: 1px solid var(--border);
+    border-radius: 9px; padding: 8px 10px; font: 13px var(--sans);
+  }
+  input.mono { font-family: var(--mono); }
+  .divider { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--a2); outline-offset: 2px; }
+
+  .btn { font: 600 13px var(--sans); border-radius: 9px; padding: 7px 12px; cursor: pointer; color: var(--text); background: rgba(255,255,255,0.05); border: 1px solid var(--border); }
+  .btn:hover { background: rgba(255,255,255,0.10); }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .btn.ghost { background: none; border-color: transparent; color: var(--muted); }
+  .btn.primary {
+    width: 100%; padding: 12px; font-size: 15px; color: #07070b; border: 0; border-radius: 12px;
+    background: linear-gradient(90deg, var(--a1), var(--a2));
+  }
+  .btn.primary:hover { filter: brightness(1.1); }
+  kbd { font: 11px var(--mono); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--muted); }
+  .hint { text-align: center; color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+
+  .results { display: grid; gap: 8px; }
+  .result { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.35); border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; }
+  .txt { flex: 1; min-width: 0; font: 15px/1.4 var(--mono); overflow-wrap: anywhere; user-select: all; }
+  .results.single .txt { font-size: 19px; }
+  .results.masked .txt { filter: blur(7px); transition: filter .15s; }
+  .results.masked .result:hover .txt { filter: none; }
+  .empty { padding: 30px 0; text-align: center; color: var(--muted); }
+
+  .meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 18px 0 12px; }
+  .seg { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .k { color: var(--muted); font-size: 12px; }
+  .v { font-weight: 700; font-size: 15px; margin-top: 2px; }
+  .note { color: var(--muted); font-size: 12px; margin: 12px 0 0; }
+  .actions { margin-top: 12px; }
+
+  .hist { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font: 12px var(--mono); color: var(--text); background: rgba(0,0,0,0.35); border: 1px solid var(--border); border-radius: 8px; padding: 4px 9px; cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip span { display: inline-block; filter: blur(5px); transition: filter .15s; }
+  .chip:hover span, .chip:focus-visible span { filter: none; }
+  .inline { display: flex; gap: 8px; align-items: center; }
+  .inline input { margin-top: 0; }
+
+  @media (prefers-reduced-motion: reduce) { .shiny { animation: none; } }
+</style>
+</head>
+<body>
+<div id="root"><p style="padding:24px;color:#9a97ad">Loading…</p></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+(() => {
+  if (!window.React || !window.ReactDOM || !window.htm || !window.gsap) {
+    document.getElementById('root').textContent = 'Could not load required libraries.';
+    return;
+  }
+  const { useState, useEffect, useRef, useCallback } = React;
+  const html = htm.bind(React.createElement);
+  const rmq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const reduced = () => rmq.matches;
+
+  /* ================= i18n ================= */
+  const I18N = {
+    de: {
+      title: 'Passwort- & Benutzername-Generator', subtitle: 'Läuft komplett lokal im Browser. Nichts wird gesendet.',
+      options: 'Einstellungen', tabPassword: 'Passwort', tabPassphrase: 'Passphrase', tabUsername: 'Nutzername', tabPin: 'PIN', tabToken: 'Token',
+      length: 'Länge', upper: 'Großbuchstaben (A–Z)', lower: 'Kleinbuchstaben (a–z)', digits: 'Zahlen (0–9)', symbols: 'Symbole (!@#$% …)',
+      ambig: 'Ähnliche Zeichen vermeiden (O 0 l 1 I |)', exclude: 'Zeichen ausschließen', excludePh: 'z. B. {}[]',
+      words: 'Wörter', separator: 'Trennzeichen', sepSpace: 'Leerzeichen', sepNone: 'Keins', capitalize: 'Wörter großschreiben', appendNum: 'Zahl anhängen',
+      maxLength: 'Maximale Länge', style: 'Schreibweise', trailing: 'Zahlen am Ende', tokenKind: 'Format',
+      count: 'Anzahl', autoClear: 'Zwischenablage nach 30 s leeren', generate: 'Generieren', shortcut: 'Tastenkürzel',
+      result: 'Ergebnis', hide: 'Ausblenden', show: 'Einblenden', empty: 'Noch nichts generiert.', strength: 'Stärke', entropy: 'Entropie', crack: 'Knackzeit',
+      assumption: 'Annahme: 10 Mrd. Versuche pro Sekunde (Offline-Angriff auf einen schnellen Hash).',
+      copy: 'Kopieren', copied: 'Kopiert', copyAll: 'Alle kopieren', history: 'Verlauf (nur diese Sitzung)', clear: 'Leeren', histEmpty: 'Leer.',
+      pickOne: 'Wähle mindestens einen Zeichentyp.',
+      lv1: 'Sehr schwach', lv2: 'Schwach', lv3: 'Mittel', lv4: 'Stark', lv5: 'Sehr stark',
+      instant: 'sofort', sec: 'Sekunden', min: 'Minuten', hrs: 'Stunden', days: 'Tage', years: 'Jahre', kyears: 'Tsd. Jahre', myears: 'Mio. Jahre', gyears: '> 1 Mrd. Jahre',
+      noteUsername: 'Benutzernamen sind öffentlich sichtbar. Nicht als Passwort verwenden.',
+      notePin: 'PINs nur dort verwenden, wo Fehlversuche begrenzt werden.',
+      notePassphrase: 'Jedes Wort bringt rund 7 Bit. Ab 5 Wörtern ist eine Passphrase gut merkbar und stabil.',
+      notePassword: 'Pro Konto ein eigenes Passwort, am besten in einem Passwortmanager.',
+      noteToken: 'Für API-Schlüssel und Secrets. Nicht im Code einchecken.',
+      checkTitle: 'Passwort prüfen', checkPh: 'Passwort eingeben',
+      checkNote: 'Grobe Schätzung, lokal berechnet und nicht gespeichert. Echte Wörter sind schwächer als zufällige Zeichen.',
+      common: 'Steht auf einer Liste häufiger Passwörter.', pattern: 'Enthält Wiederholungen oder Zeichenfolgen.', showPw: 'Anzeigen', hidePw: 'Verbergen'
+    },
+    en: {
+      title: 'Password & Username Generator', subtitle: 'Runs entirely in your browser. Nothing is sent anywhere.',
+      options: 'Settings', tabPassword: 'Password', tabPassphrase: 'Passphrase', tabUsername: 'Username', tabPin: 'PIN', tabToken: 'Token',
+      length: 'Length', upper: 'Uppercase (A–Z)', lower: 'Lowercase (a–z)', digits: 'Digits (0–9)', symbols: 'Symbols (!@#$% …)',
+      ambig: 'Avoid look-alike characters (O 0 l 1 I |)', exclude: 'Exclude characters', excludePh: 'e.g. {}[]',
+      words: 'Words', separator: 'Separator', sepSpace: 'Space', sepNone: 'None', capitalize: 'Capitalize words', appendNum: 'Append number',
+      maxLength: 'Max length', style: 'Case style', trailing: 'Trailing digits', tokenKind: 'Format',
+      count: 'Count', autoClear: 'Clear clipboard after 30 s', generate: 'Generate', shortcut: 'Shortcut',
+      result: 'Result', hide: 'Hide', show: 'Show', empty: 'Nothing generated yet.', strength: 'Strength', entropy: 'Entropy', crack: 'Time to crack',
+      assumption: 'Assumes 10 billion guesses per second (offline attack on a fast hash).',
+      copy: 'Copy', copied: 'Copied', copyAll: 'Copy all', history: 'History (this session only)', clear: 'Clear', histEmpty: 'Empty.',
+      pickOne: 'Select at least one character type.',
+      lv1: 'Very weak', lv2: 'Weak', lv3: 'Fair', lv4: 'Strong', lv5: 'Very strong',
+      instant: 'instant', sec: 'seconds', min: 'minutes', hrs: 'hours', days: 'days', years: 'years', kyears: 'thousand years', myears: 'million years', gyears: '> 1 billion years',
+      noteUsername: 'Usernames are publicly visible. Do not use them as passwords.',
+      notePin: 'Only use PINs where failed attempts are rate-limited.',
+      notePassphrase: 'Each word adds about 7 bits. From 5 words a passphrase is memorable and solid.',
+      notePassword: 'One unique password per account, ideally stored in a password manager.',
+      noteToken: 'For API keys and secrets. Never commit them to code.',
+      checkTitle: 'Check a password', checkPh: 'Enter a password',
+      checkNote: 'Rough estimate, computed locally and never stored. Real words are weaker than random characters.',
+      common: 'Appears on a list of common passwords.', pattern: 'Contains repeats or character sequences.', showPw: 'Show', hidePw: 'Hide'
+    }
+  };
+
+  /* ================= crypto helpers ================= */
+  function randInt(max) {
+    const buf = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / max) * max;
+    do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
+    return buf[0] % max;
+  }
+  const pick = a => a[randInt(a.length)];
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  const log2 = Math.log2;
+
+  const SETS = { upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', lower: 'abcdefghijklmnopqrstuvwxyz', digits: '0123456789', symbols: '!@#$%^&*()-_=+[]{};:,.?/' };
+  const AMBIG = 'O0oIl1|';
+  const WORDS = {
+    en: 'able acid arch atom bake barn bean bell bird blue boat bold bone book brick brook cabin cable camel candy cargo cedar chair chalk chess clay cliff cloud coast coral crane creek crisp daisy delta desk dock dove drift drum dune eagle earth ember epoch fable fern field flame flint forge frost garden gentle glade glass globe grain grape grove harbor hazel heron honey igloo inlet iron island jade jelly kayak kettle knob lake lamp lantern lemon lilac linen lunar maple marsh meadow mint mirror moss north nutmeg oak oasis olive onyx orbit otter paper pearl pebble pine plum polar pond prism quartz quill raven reef ridge river robin rust saddle sage sand shore silk slate snow spark spruce stone storm sugar summit swan thistle tide timber topaz trail tulip valley velvet violet walnut wave willow winter wren yarrow zephyr'.split(' '),
+    de: 'apfel ahorn amsel anker bach baum becher berg birne blatt blume boden brot bruecke buche burg dach delfin distel donner dorf drache eiche eimer engel erbse esel falke farn feder feld fisch flamme fluss forelle fuchs gabel garten gipfel glocke gras hafen hase hecht heide himmel hirsch holz honig hummel igel insel kaffee kamel kante katze kerze kiesel kirsche klee knopf kohle krabbe kranich kuchen lampe laterne lerche licht linde loewe luchs mantel marder meer mond moos nebel nuss otter pfad pilz pinsel quelle rabe regen reiter ring rose salbei sand schaf schiff schnee seide sonne specht spiegel stein sterne storch strand tal tanne taube tinte tisch turm ufer wald welle wiese wind wolke wolf zaun zebra zimt ziege'.split(' ')
+  };
+  const ADJ = ['Cool','Blue','Red','Happy','Fast','Smart','Brave','Lucky','Wild','Epic','Mystic','Shadow','Fire','Ice','Star','Moon','Sun','Silent','Rapid','Noble','Calm','Bold','Swift','Amber','Iron','Misty','Solar','Lunar','Frosty','Quiet'];
+  const NOUN = ['Tiger','Lion','Eagle','Shark','Panda','Fox','Bear','Hawk','Sky','Storm','River','Mountain','Forest','Ocean','Knight','Wizard','Hero','Ninja','Pirate','Robot','Falcon','Otter','Comet','Harbor','Raven','Pixel','Anchor','Cedar','Orbit','Wolf'];
+  const COMMON = ['password','123456','12345678','123456789','1234567890','qwerty','qwertz','abc123','letmein','111111','000000','iloveyou','admin','welcome','monkey','dragon','passwort','hallo123','sonne','master','login','princess','football','baseball','trustno1','password1','test','hallo'];
+
+  /* ================= generators ================= */
+  function generate(mode, o, lang) {
+    if (mode === 'password') {
+      const sets = [];
+      ['upper', 'lower', 'digits', 'symbols'].forEach(k => {
+        if (!o[k]) return;
+        const drop = (o.ambig ? AMBIG : '') + (o.exclude || '');
+        const s = [...SETS[k]].filter(c => !drop.includes(c)).join('');
+        if (s) sets.push(s);
+      });
+      if (!sets.length) return { error: 'pickOne' };
+      const all = sets.join('');
+      const make = () => { const ch = sets.map(pick); while (ch.length < o.pwLen) ch.push(all[randInt(all.length)]); return shuffle(ch).join(''); };
+      return { make, bits: o.pwLen * log2(all.length) };
+    }
+    if (mode === 'passphrase') {
+      const list = WORDS[lang];
+      const make = () => {
+        const parts = Array.from({ length: o.ppWords }, () => { const w = pick(list); return o.ppCap ? w[0].toUpperCase() + w.slice(1) : w; });
+        return parts.join(o.ppSep) + (o.ppNum ? o.ppSep + randInt(100) : '');
+      };
+      return { make, bits: o.ppWords * log2(list.length) + (o.ppNum ? log2(100) : 0) };
+    }
+    if (mode === 'username') {
+      const make = () => {
+        let out = '';
+        for (let i = 0; i < 200; i++) {
+          const a = pick(ADJ), n = pick(NOUN);
+          const base = o.unStyle === 'pascal' ? a + n : o.unStyle === 'snake' ? (a + '_' + n).toLowerCase() : (a + n).toLowerCase();
+          let d = ''; for (let k = 0; k < +o.unDigits; k++) d += randInt(10);
+          out = base + d;
+          if (out.length <= o.unLen) return out;
+        }
+        return out.slice(0, o.unLen);
+      };
+      return { make, bits: null };
+    }
+    if (mode === 'pin') {
+      return { make: () => Array.from({ length: o.pinLen }, () => randInt(10)).join(''), bits: o.pinLen * log2(10) };
+    }
+    // token
+    if (o.tokKind === 'uuid') {
+      const make = () => {
+        const b = crypto.getRandomValues(new Uint8Array(16));
+        b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+        const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+        return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+      };
+      return { make, bits: 122 };
+    }
+    const alpha = o.tokKind === 'hex' ? '0123456789abcdef' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    return { make: () => Array.from({ length: o.tokLen }, () => alpha[randInt(alpha.length)]).join(''), bits: o.tokLen * log2(alpha.length) };
+  }
+
+  function levelOf(bits) { return bits < 40 ? 1 : bits < 60 ? 2 : bits < 80 ? 3 : bits < 100 ? 4 : 5; }
+  const LEVEL_COLORS = ['#ff5d6c', '#ff9a4d', '#ffd24d', '#7bdc8c', '#3ee6b5'];
+
+  function crackText(bits, lang, t) {
+    const f = n => new Intl.NumberFormat(lang, { maximumFractionDigits: n < 10 ? 1 : 0 }).format(n);
+    const s = Math.pow(2, bits - 1) / 1e10;
+    if (s < 1) return t('instant');
+    if (s < 60) return f(s) + ' ' + t('sec');
+    if (s < 3600) return f(s / 60) + ' ' + t('min');
+    if (s < 86400) return f(s / 3600) + ' ' + t('hrs');
+    if (s < 86400 * 365) return f(s / 86400) + ' ' + t('days');
+    const y = s / (86400 * 365);
+    if (y < 1e3) return f(y) + ' ' + t('years');
+    if (y < 1e6) return f(y / 1e3) + ' ' + t('kyears');
+    if (y < 1e9) return f(y / 1e6) + ' ' + t('myears');
+    return t('gyears');
+  }
+
+  function analyze(pw) {
+    if (!pw) return null;
+    let pool = 0;
+    if (/[a-z]/.test(pw)) pool += 26;
+    if (/[A-Z]/.test(pw)) pool += 26;
+    if (/[0-9]/.test(pw)) pool += 10;
+    if (/[^a-zA-Z0-9]/.test(pw)) pool += 33;
+    let bits = pw.length * log2(pool || 1);
+    const flags = [];
+    const base = pw.toLowerCase().replace(/[\d\W_]+$/g, '');
+    if (COMMON.includes(pw.toLowerCase()) || COMMON.includes(base)) { bits = Math.min(bits, 12); flags.push('common'); }
+    let seq = /(.)\1{2,}/.test(pw);
+    const l = pw.toLowerCase();
+    for (let i = 0; i < l.length - 2 && !seq; i++) {
+      const a = l.charCodeAt(i), b = l.charCodeAt(i + 1), c = l.charCodeAt(i + 2);
+      if ((b - a === 1 && c - b === 1) || (a - b === 1 && b - c === 1)) seq = true;
+    }
+    if (seq) { bits *= 0.7; flags.push('pattern'); }
+    return { bits, flags };
+  }
+
+  /* ================= React Bits style components ================= */
+
+  // Particles background (canvas, pointer-reactive)
+  function Particles() {
+    const ref = useRef(null);
+    useEffect(() => {
+      const c = ref.current, ctx = c.getContext('2d');
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let w = 0, h = 0, raf = 0, ps = [];
+      const mouse = { x: -999, y: -999 };
+      const resize = () => {
+        w = window.innerWidth; h = window.innerHeight;
+        c.width = w * dpr; c.height = h * dpr; c.style.width = w + 'px'; c.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const n = Math.round(Math.min(70, (w * h) / 22000));
+        ps = Array.from({ length: n }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35 }));
+      };
+      const frame = () => {
+        ctx.clearRect(0, 0, w, h);
+        const move = !reduced();
+        for (const p of ps) {
+          if (move) {
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0 || p.x > w) p.vx *= -1;
+            if (p.y < 0 || p.y > h) p.vy *= -1;
+            const dx = p.x - mouse.x, dy = p.y - mouse.y, d = Math.hypot(dx, dy);
+            if (d < 120 && d > 0) { p.x += dx / d * 1.2; p.y += dy / d * 1.2; }
+          }
+          ctx.fillStyle = 'rgba(160,150,255,0.55)';
+          ctx.beginPath(); ctx.arc(p.x, p.y, 1.4, 0, 6.283); ctx.fill();
+        }
+        for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+          const d = Math.hypot(ps[i].x - ps[j].x, ps[i].y - ps[j].y);
+          if (d < 115) { ctx.strokeStyle = `rgba(139,123,255,${0.16 * (1 - d / 115)})`; ctx.beginPath(); ctx.moveTo(ps[i].x, ps[i].y); ctx.lineTo(ps[j].x, ps[j].y); ctx.stroke(); }
+        }
+        if (!reduced()) raf = requestAnimationFrame(frame);
+      };
+      const onMove = e => { mouse.x = e.clientX; mouse.y = e.clientY; };
+      resize(); frame();
+      window.addEventListener('resize', resize); window.addEventListener('pointermove', onMove);
+      return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); window.removeEventListener('pointermove', onMove); };
+    }, []);
+    return html`<canvas ref=${ref} className="bg" aria-hidden="true"></canvas>`;
+  }
+
+  // SpotlightCard: pointer-following highlight
+  function SpotlightCard({ className = '', children, ...rest }) {
+    const onMove = e => {
+      const r = e.currentTarget.getBoundingClientRect();
+      e.currentTarget.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      e.currentTarget.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    };
+    return html`<section className=${'card reveal ' + className} onPointerMove=${onMove} ...${rest}>${children}</section>`;
+  }
+
+  // BlurText: words blur in, staggered (GSAP)
+  function BlurText({ text }) {
+    const ref = useRef(null);
+    useEffect(() => {
+      if (reduced()) return;
+      const tw = gsap.fromTo(ref.current.children, { filter: 'blur(10px)', opacity: 0, y: -8 }, { filter: 'blur(0px)', opacity: 1, y: 0, duration: .55, stagger: .07, ease: 'power2.out', clearProps: 'filter,opacity,transform' });
+      return () => tw.kill();
+    }, [text]);
+    const words = text.split(' ');
+    return html`<p className="sub" ref=${ref} key=${text}>${words.map((w, i) => html`<span className="w" key=${i}>${w + (i < words.length - 1 ? ' ' : '')}</span>`)}</p>`;
+  }
+
+  // DecryptedText: scramble then settle, left to right
+  const GLYPHS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*?';
+  function DecryptedText({ text, delay = 0, className = '' }) {
+    const ref = useRef(null);
+    useEffect(() => {
+      const el = ref.current;
+      el.textContent = text;
+      if (reduced()) return;
+      const o = { p: 0 };
+      const tw = gsap.to(o, {
+        p: 1, delay, ease: 'none', duration: .35 + Math.min(text.length, 40) * .008,
+        onUpdate() {
+          const n = Math.floor(o.p * text.length);
+          let s = text.slice(0, n);
+          for (let k = n; k < text.length; k++) s += GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+          el.textContent = s;
+        },
+        onComplete() { el.textContent = text; }
+      });
+      return () => { tw.kill(); el.textContent = text; };
+    }, [text]);
+    return html`<span ref=${ref} className=${className}></span>`;
+  }
+
+  // CountUp
+  function CountUp({ to, suffix = '' }) {
+    const ref = useRef(null), prev = useRef(0);
+    useEffect(() => {
+      const o = { v: prev.current };
+      const set = v => { ref.current.textContent = Math.round(v) + suffix; };
+      if (reduced()) { set(to); prev.current = to; return; }
+      const tw = gsap.to(o, { v: to, duration: .8, ease: 'power2.out', onUpdate: () => set(o.v), onComplete: () => { prev.current = to; } });
+      return () => tw.kill();
+    }, [to]);
+    return html`<span ref=${ref}></span>`;
+  }
+
+  // Magnet: element drifts toward the pointer
+  function Magnet({ children, strength = .25 }) {
+    const outer = useRef(null), inner = useRef(null);
+    const move = e => {
+      if (reduced()) return;
+      const r = outer.current.getBoundingClientRect();
+      gsap.to(inner.current, { x: (e.clientX - r.left - r.width / 2) * strength, y: (e.clientY - r.top - r.height / 2) * strength, duration: .3, ease: 'power2.out' });
+    };
+    const leave = () => gsap.to(inner.current, { x: 0, y: 0, duration: reduced() ? 0 : .6, ease: 'elastic.out(1,.4)' });
+    return html`<div ref=${outer} onMouseMove=${move} onMouseLeave=${leave}><div ref=${inner}>${children}</div></div>`;
+  }
+
+  /* ================= UI pieces ================= */
+  function Tabs({ mode, setMode, items, lang }) {
+    const ind = useRef(null), btns = useRef({}), first = useRef(true);
+    const place = useCallback(animate => {
+      const b = btns.current[mode]; if (!b) return;
+      const v = { x: b.offsetLeft, width: b.offsetWidth };
+      if (animate && !reduced()) gsap.to(ind.current, { ...v, duration: .35, ease: 'power3.out' }); else gsap.set(ind.current, v);
+    }, [mode]);
+    useEffect(() => { place(!first.current); first.current = false; }, [mode, lang, place]);
+    useEffect(() => { const f = () => place(false); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, [place]);
+    const onKey = e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const keys = items.map(i => i[0]); const i = keys.indexOf(mode);
+      const next = keys[(i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length];
+      setMode(next); setTimeout(() => btns.current[next] && btns.current[next].focus(), 0);
+    };
+    return html`<div className="tabs" role="tablist" onKeyDown=${onKey}>
+      <div className="tab-ind" ref=${ind}></div>
+      ${items.map(([k, label]) => html`<button key=${k} type="button" role="tab" className="tab" aria-selected=${mode === k} tabIndex=${mode === k ? 0 : -1}
+        ref=${el => { btns.current[k] = el; }} onClick=${() => setMode(k)}>${label}</button>`)}
+    </div>`;
+  }
+
+  function Slider({ id, label, min, max, value, onChange }) {
+    return html`<div className="field">
+      <div className="row"><label htmlFor=${id}>${label}</label><span className="val">${value}</span></div>
+      <input type="range" id=${id} min=${min} max=${max} value=${value} onChange=${e => onChange(+e.target.value)} />
+    </div>`;
+  }
+  function Check({ label, checked, onChange }) {
+    return html`<label className="check"><input type="checkbox" checked=${checked} onChange=${e => onChange(e.target.checked)} /><span>${label}</span></label>`;
+  }
+  function Select({ id, label, value, onChange, options }) {
+    return html`<div className="field"><label className="lbl" htmlFor=${id}>${label}</label>
+      <select id=${id} value=${value} onChange=${e => onChange(e.target.value)}>${options.map(([v, l]) => html`<option key=${v} value=${v}>${l}</option>`)}</select></div>`;
+  }
+
+  function Meter({ level }) {
+    const ref = useRef(null);
+    useEffect(() => {
+      gsap.to(ref.current.children, { backgroundColor: i => i < level ? LEVEL_COLORS[level - 1] : 'rgba(255,255,255,0.08)', duration: reduced() ? 0 : .3, stagger: reduced() ? 0 : .05, overwrite: true });
+    }, [level]);
+    return html`<div className="meter" ref=${ref} aria-hidden="true">${[0, 1, 2, 3, 4].map(i => html`<div className="seg" key=${i}></div>`)}</div>`;
+  }
+
+  function Stats({ bits, lang, t }) {
+    const lv = levelOf(bits);
+    return html`<div>
+      <${Meter} level=${lv} />
+      <div className="stats">
+        <div><div className="k">${t('strength')}</div><div className="v" style=${{ color: LEVEL_COLORS[lv - 1] }}>${t('lv' + lv)}</div></div>
+        <div><div className="k">${t('entropy')}</div><div className="v"><${CountUp} to=${bits} suffix=" bit" /></div></div>
+        <div><div className="k">${t('crack')}</div><div className="v">${crackText(bits, lang, t)}</div></div>
+      </div>
+    </div>`;
+  }
+
+  function CopyButton({ onCopy, t }) {
+    const [done, setDone] = useState(false), ref = useRef(null);
+    const click = async () => {
+      const ok = await onCopy();
+      if (!ok) return;
+      setDone(true);
+      if (!reduced()) gsap.fromTo(ref.current, { scale: .92 }, { scale: 1, duration: .3, ease: 'back.out(3)' });
+      setTimeout(() => setDone(false), 1200);
+    };
+    return html`<button type="button" className="btn small" ref=${ref} onClick=${click}>${done ? t('copied') : t('copy')}</button>`;
+  }
+
+  /* ================= App ================= */
+  const DEFAULTS = {
+    pwLen: 20, upper: true, lower: true, digits: true, symbols: true, ambig: false, exclude: '',
+    ppWords: 5, ppSep: '-', ppCap: true, ppNum: true,
+    unLen: 16, unStyle: 'pascal', unDigits: 2, pinLen: 6, tokKind: 'hex', tokLen: 32, count: 1, autoClear: false
+  };
+  function loadSaved() { try { return JSON.parse(localStorage.getItem('pg:v2') || 'null') || {}; } catch (e) { return {}; } }
+
+  function App() {
+    const saved = useRef(loadSaved()).current;
+    const [lang, setLang] = useState(saved.lang === 'en' ? 'en' : 'de');
+    const [mode, setMode] = useState(['password', 'passphrase', 'username', 'pin', 'token'].includes(saved.mode) ? saved.mode : 'password');
+    const [o, setO] = useState({ ...DEFAULTS, ...(saved.o || {}) });
+    const [res, setRes] = useState({ items: [], bits: null, id: 0 });
+    const [history, setHistory] = useState([]);
+    const [masked, setMasked] = useState(false);
+    const [check, setCheck] = useState('');
+    const [showCheck, setShowCheck] = useState(false);
+    const clipTimer = useRef(null);
+    const t = useCallback(k => I18N[lang][k] || k, [lang]);
+    const set = k => v => setO(p => ({ ...p, [k]: v }));
+
+    useEffect(() => {
+      document.documentElement.lang = lang; document.title = t('title');
+      try { localStorage.setItem('pg:v2', JSON.stringify({ lang, mode, o })); } catch (e) {}
+    }, [lang, mode, o, t]);
+
+    useEffect(() => {
+      if (reduced()) return;
+      gsap.from('.reveal', { opacity: 0, y: 14, duration: .6, stagger: .08, ease: 'power3.out', clearProps: 'opacity,transform' });
+    }, []);
+
+    const copy = useCallback(async text => {
+      let ok = false;
+      try { await navigator.clipboard.writeText(text); ok = true; }
+      catch (e) {
+        try { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove(); } catch (e2) {}
+      }
+      if (ok && o.autoClear) { clearTimeout(clipTimer.current); clipTimer.current = setTimeout(() => { try { navigator.clipboard.writeText(''); } catch (e) {} }, 30000); }
+      return ok;
+    }, [o.autoClear]);
+
+    const run = useCallback(() => {
+      const g = generate(mode, o, lang);
+      if (g.error) { setRes(r => ({ items: [], bits: null, id: r.id + 1, error: g.error })); return; }
+      const items = Array.from({ length: +o.count }, g.make);
+      setRes(r => ({ items, bits: g.bits, id: r.id + 1 }));
+      if (mode !== 'username') setHistory(h => [...items.slice(0, 3), ...h].slice(0, 8));
+    }, [mode, o, lang]);
+
+    const runRef = useRef(run); runRef.current = run;
+    useEffect(() => {
+      const onKey = e => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+        if (e.key === 'g' || e.key === 'G') { e.preventDefault(); runRef.current(); }
+      };
+      document.addEventListener('keydown', onKey); return () => document.removeEventListener('keydown', onKey);
+    }, []);
+
+    // results grow/shrink animation
+    const resRef = useRef(null);
+    useEffect(() => {
+      if (!res.items.length || reduced() || !resRef.current) return;
+      gsap.from(resRef.current.children, { opacity: 0, y: 8, duration: .3, stagger: .04, ease: 'power2.out', clearProps: 'opacity,transform' });
+    }, [res.id]);
+
+    const tabItems = [['password', t('tabPassword')], ['passphrase', t('tabPassphrase')], ['username', t('tabUsername')], ['pin', t('tabPin')], ['token', t('tabToken')]];
+    const notes = { password: 'notePassword', passphrase: 'notePassphrase', username: 'noteUsername', pin: 'notePin', token: 'noteToken' };
+    const chk = analyze(check);
+
+    return html`
+      <${Particles} />
+      <div className="wrap">
+        <header className="reveal">
+          <div>
+            <h1 className="shiny" key=${lang}>${t('title')}</h1>
+            <${BlurText} text=${t('subtitle')} />
+          </div>
+          <div className="lang" role="group" aria-label="Language">
+            <button type="button" aria-pressed=${lang === 'en'} onClick=${() => setLang('en')}>EN</button>
+            <button type="button" aria-pressed=${lang === 'de'} onClick=${() => setLang('de')}>DE</button>
+          </div>
+        </header>
+
+        <div className="grid">
+          <div className="col">
+            <${SpotlightCard} aria-labelledby="optH">
+              <h2 id="optH">${t('options')}</h2>
+              <${Tabs} mode=${mode} setMode=${setMode} items=${tabItems} lang=${lang} />
+
+              ${mode === 'password' && html`<div>
+                <${Slider} id="pwLen" label=${t('length')} min=${6} max=${64} value=${o.pwLen} onChange=${set('pwLen')} />
+                <div className="checks">
+                  <${Check} label=${t('upper')} checked=${o.upper} onChange=${set('upper')} />
+                  <${Check} label=${t('lower')} checked=${o.lower} onChange=${set('lower')} />
+                  <${Check} label=${t('digits')} checked=${o.digits} onChange=${set('digits')} />
+                  <${Check} label=${t('symbols')} checked=${o.symbols} onChange=${set('symbols')} />
+                  <${Check} label=${t('ambig')} checked=${o.ambig} onChange=${set('ambig')} />
+                </div>
+                <div className="field"><label className="lbl" htmlFor="excl">${t('exclude')}</label>
+                  <input type="text" id="excl" className="mono" value=${o.exclude} placeholder=${t('excludePh')} maxLength="20" autoComplete="off" spellCheck="false" onChange=${e => set('exclude')(e.target.value)} /></div>
+              </div>`}
+
+              ${mode === 'passphrase' && html`<div>
+                <${Slider} id="ppWords" label=${t('words')} min=${3} max=${10} value=${o.ppWords} onChange=${set('ppWords')} />
+                <${Select} id="ppSep" label=${t('separator')} value=${o.ppSep} onChange=${set('ppSep')}
+                  options=${[['-', '-'], [' ', t('sepSpace')], ['.', '.'], ['_', '_'], ['', t('sepNone')]]} />
+                <div className="checks">
+                  <${Check} label=${t('capitalize')} checked=${o.ppCap} onChange=${set('ppCap')} />
+                  <${Check} label=${t('appendNum')} checked=${o.ppNum} onChange=${set('ppNum')} />
+                </div>
+              </div>`}
+
+              ${mode === 'username' && html`<div>
+                <${Slider} id="unLen" label=${t('maxLength')} min=${8} max=${24} value=${o.unLen} onChange=${set('unLen')} />
+                <${Select} id="unStyle" label=${t('style')} value=${o.unStyle} onChange=${set('unStyle')} options=${[['pascal', 'PascalCase'], ['snake', 'snake_case'], ['lower', 'lowercase']]} />
+                <${Select} id="unDigits" label=${t('trailing')} value=${o.unDigits} onChange=${v => set('unDigits')(+v)} options=${[[0, '0'], [2, '2'], [3, '3'], [4, '4']]} />
+              </div>`}
+
+              ${mode === 'pin' && html`<div><${Slider} id="pinLen" label=${t('length')} min=${4} max=${12} value=${o.pinLen} onChange=${set('pinLen')} /></div>`}
+
+              ${mode === 'token' && html`<div>
+                <${Select} id="tokKind" label=${t('tokenKind')} value=${o.tokKind} onChange=${set('tokKind')} options=${[['hex', 'Hex'], ['b64', 'Base64url'], ['uuid', 'UUID v4']]} />
+                ${o.tokKind !== 'uuid' && html`<${Slider} id="tokLen" label=${t('length')} min=${16} max=${128} value=${o.tokLen} onChange=${set('tokLen')} />`}
+              </div>`}
+
+              <hr className="divider" />
+              <${Select} id="count" label=${t('count')} value=${o.count} onChange=${v => set('count')(+v)} options=${[[1, '1'], [5, '5'], [10, '10'], [20, '20']]} />
+              <div className="checks"><${Check} label=${t('autoClear')} checked=${o.autoClear} onChange=${set('autoClear')} /></div>
+
+              <${Magnet}><button type="button" className="btn primary" onClick=${run}>${t('generate')}</button><//>
+              <p className="hint">${t('shortcut')} <kbd>G</kbd></p>
+            <//>
+          </div>
+
+          <div className="col">
+            <${SpotlightCard} aria-labelledby="resH">
+              <div className="head">
+                <h2 id="resH">${t('result')}</h2>
+                <button type="button" className="btn small ghost" aria-pressed=${masked} onClick=${() => setMasked(m => !m)}>${masked ? t('show') : t('hide')}</button>
+              </div>
+              ${res.items.length === 0
+                ? html`<div className="empty">${res.error ? t(res.error) : t('empty')}</div>`
+                : html`<div className=${'results' + (res.items.length === 1 ? ' single' : '') + (masked ? ' masked' : '')} ref=${resRef} aria-live="polite">
+                    ${res.items.map((text, i) => html`<div className="result" key=${res.id + '-' + i}>
+                      <${DecryptedText} className="txt" text=${text} delay=${i * .04} />
+                      <${CopyButton} t=${t} onCopy=${() => copy(text)} />
+                    </div>`)}
+                  </div>`}
+              ${res.items.length > 1 && html`<div className="actions"><${CopyButton} t=${k => k === 'copy' ? t('copyAll') : t(k)} onCopy=${() => copy(res.items.join('\n'))} /></div>`}
+              ${res.items.length > 0 && res.bits !== null && html`<${Stats} bits=${res.bits} lang=${lang} t=${t} />
+                <p className="note">${t('assumption')}</p>`}
+              ${res.items.length > 0 && html`<p className="note">${t(notes[mode])}</p>`}
+            <//>
+
+            <${SpotlightCard} aria-labelledby="chkH">
+              <h2 id="chkH">${t('checkTitle')}</h2>
+              <div className="inline">
+                <input type=${showCheck ? 'text' : 'password'} className="mono" value=${check} placeholder=${t('checkPh')} autoComplete="off" spellCheck="false"
+                  onChange=${e => setCheck(e.target.value)} aria-label=${t('checkPh')} />
+                <button type="button" className="btn small" onClick=${() => setShowCheck(s => !s)}>${showCheck ? t('hidePw') : t('showPw')}</button>
+              </div>
+              ${chk && html`<div style=${{ marginTop: '4px' }}>
+                <${Stats} bits=${chk.bits} lang=${lang} t=${t} />
+                ${chk.flags.map(f => html`<p className="note" key=${f} style=${{ color: '#ffb36b' }}>${t(f)}</p>`)}
+              </div>`}
+              <p className="note">${t('checkNote')}</p>
+            <//>
+
+            <${SpotlightCard} aria-labelledby="histH">
+              <div className="head">
+                <h2 id="histH">${t('history')}</h2>
+                <button type="button" className="btn small ghost" onClick=${() => setHistory([])}>${t('clear')}</button>
+              </div>
+              <div className="hist">
+                ${history.length === 0 ? html`<span className="note" style=${{ margin: 0 }}>${t('histEmpty')}</span>`
+                  : history.map((h, i) => html`<button type="button" className="chip" key=${i + h} onClick=${() => copy(h)}><span>${h}</span></button>`)}
+              </div>
+            <//>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(html`<${App} />`);
+})();
+</script>
+</body>
+</html>
