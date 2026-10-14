@@ -25,3 +25,4 @@ hinweis/Note
 Das CSS wurde mithilfe von KI erstellt, ebenso wie der Passwort-Scanner.
 The CSS was created using AI, and so was the password scanner.
 
+URL: https://marcel533.github.io/pass-genarator/
