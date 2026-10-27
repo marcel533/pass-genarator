@@ -1,28 +1,89 @@
-# Password & Username Generator / Passwort- & Benutzername-Generator
+# Pass Generator
+
+**Secure credentials in one click.** Generate passwords, passphrases, usernames, PINs, and tokens — all client-side.
+
+[🇺🇸 English](#english) | [🇩🇪 Deutsch](#deutsch)
+
+🔗 **Live Demo:** https://marcel533.github.io/pass-genarator/
+
 ---
 
-A minimal, client-side generator for passwords, passphrases, usernames, PINs, and developer tokens. / Ein minimaler, clientseitiger Generator für Passwörter, Passphrasen, Benutzernamen, PINs und Tokens.
+<a id="english"></a>
 
-Features / Funktionen
+## English
 
-Client-Side & Safe / Clientseitig & sicher: Uses crypto.getRandomValues() directly in your browser. / Nutzt crypto.getRandomValues() direkt im Browser.
+A minimal, browser-based generator for passwords, passphrases, usernames, PINs, and developer tokens. Built with security-first architecture using `crypto.getRandomValues()` directly in your browser — no server calls, no tracking.
 
-Multiple Modes / Mehrere Modi: Passwords, Passphrasen, Usernames, PINs, Tokens (UUID, Hex, Base64).
+### Features
 
-Strength & Crack Time / Stärke & Knackzeit: Real-time entropy evaluation. / Echtzeit-Bewertung der Entropie.
+| Feature | Description |
+|---------|-------------|
+| **Client-Side Only** | Uses `crypto.getRandomValues()` — zero data leaves your device |
+| **Multiple Modes** | Passwords, Passphrases, Usernames, PINs, Tokens (UUID, Hex, Base64) |
+| **Strength Meter** | Real-time entropy evaluation with crack time estimates |
+| **Keyboard Shortcuts** | Press `G` to generate, click to copy |
+| **Bilingual UI** | English & Deutsch toggle |
 
-Bilingual / Zweisprachig: English & Deutsch.
+### Use Cases
 
-Usage / Bedienung
+- Create strong passwords for accounts
+- Generate memorable passphrases
+- Make unique usernames
+- Create test PINs for development
+- Generate UUID/hex/base64 tokens
 
-Press G to generate / G drücken zum Generieren.
+### AI Note
 
-Click to copy / Klicken zum Kopieren.
+> ⚙️ The CSS styling and password strength scanner were created using AI. Core generation logic uses native Web Crypto API.
 
---
-hinweis/Note
+### Technical Details
 
-Das CSS wurde mithilfe von KI erstellt, ebenso wie der Passwort-Scanner.
-The CSS was created using AI, and so was the password scanner.
+| Component | Technology |
+|-----------|------------|
+| Cryptography | Web Crypto API (`crypto.getRandomValues`) |
+| Frontend | Vanilla JavaScript |
+| Styling | CSS (AI-generated) |
+| Hosting | GitHub Pages |
 
-URL: https://marcel533.github.io/pass-genarator/
+Created by **marcel533**.
+
+---
+
+<a id="deutsch"></a>
+
+## Deutsch
+
+Ein minimaler, browserbasierter Generator für Passwörter, Passphrasen, Benutzernamen, PINs und Developer-Tokens. Mit security-first Architektur mittels `crypto.getRandomValues()` direkt im Browser — keine Server-Anrufe, kein Tracking.
+
+### Funktionen
+
+| Funktion | Beschreibung |
+|----------|--------------|
+| **Nur Client-seitig** | Nutzt `crypto.getRandomValues()` — keine Daten verlassen dein Gerät |
+| **Mehrere Modi** | Passwörter, Passphrasen, Benutzernamen, PINs, Tokens (UUID, Hex, Base64) |
+| **Stärkemesser** | Echtzeit-Entropie-Bewertung mit Knackzeit-Schätzung |
+| **Tastenkürzel** | `G` zum Generieren, Klick zum Kopieren |
+| **Zweisprachig** | English & Deutsch Umschalter |
+
+### Einsatzgebiete
+
+- Starke Passwörter für Accounts erstellen
+- Merkenswürdige Passphrasen generieren
+- Einzigartige Benutzernamen machen
+- Test-PINs für Entwicklung
+- UUID/hex/base64 Tokens generieren
+
+### KI-Hinweis
+
+> ⚙️ Das CSS-Styling und der Passwort-Stärkescanner wurden mit KI erstellt. Die Kern-Generierungslogik nutzt die native Web Crypto API.
+
+### Technische Details
+
+| Komponente | Technologie |
+|------------|-------------|
+| Kryptographie | Web Crypto API (`crypto.getRandomValues`) |
+| Frontend | Vanilla JavaScript |
+| Styling | CSS (KI-generiert) |
+| Hosting | GitHub Pages |
+
+Erstellt von **marcel533**.
