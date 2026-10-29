@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjQ5NiIgaGVpZ2h0PSI0OTYiIHJ4PSIxMDQiIGZpbGw9IiMxNjE2MTgiIHN0cm9rZT0iIzJBMkEyRSIgc3Ryb2tlLXdpZHRoPSI4Ii8+CjxnIHRyYW5zZm9ybT0icm90YXRlKC00NSAyNTYgMjU2KSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjJCOThDIiBzdHJva2Utd2lkdGg9IjI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgo8Y2lyY2xlIGN4PSIxNTAiIGN5PSIyNTYiIHI9IjYyIi8+CjxwYXRoIGQ9Ik0yMTIgMjU2IEg0MTQiLz4KPHBhdGggZD0iTTMyNiAyNTYgVjMxMiIvPjxwYXRoIGQ9Ik0zNzAgMjU2IFYyOTAiLz48cGF0aCBkPSJNNDE0IDI1NiBWMzIyIi8+CjwvZz4KPGcgc3Ryb2tlPSIjRDBBMDUwIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0xODEuMCAzMDkuMCBMMTgxLjAgMzUzLjAiLz48cGF0aCBkPSJNMTYxLjkgMzIwLjAgTDIwMC4xIDM0Mi4wIi8+PHBhdGggZD0iTTE2MS45IDM0Mi4wIEwyMDAuMSAzMjAuMCIvPjwvZz4KPC9zdmc+">
 <title>Passwort- & Benutzername-Generator</title>
 <style>
   :root {
@@ -31,6 +32,8 @@
   .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 56px; }
 
   header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .brand .logo { width: 44px; height: 44px; flex: none; display: block; border-radius: 11px; }
   h1 { margin: 0; font-size: clamp(20px, 3.2vw, 26px); font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; }
   .shiny { color: var(--text); background: none; animation: none; -webkit-text-fill-color: currentColor; }
   .sub { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
@@ -510,9 +513,12 @@
     return html`
       <div className="wrap">
         <header className="reveal">
-          <div>
-            <h1 className="shiny" key=${lang}>${t('title')}</h1>
-            <${BlurText} text=${t('subtitle')} />
+          <div className="brand">
+            <img className="logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KPHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjQ5NiIgaGVpZ2h0PSI0OTYiIHJ4PSIxMDQiIGZpbGw9IiMxNjE2MTgiIHN0cm9rZT0iIzJBMkEyRSIgc3Ryb2tlLXdpZHRoPSI4Ii8+CjxnIHRyYW5zZm9ybT0icm90YXRlKC00NSAyNTYgMjU2KSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjJCOThDIiBzdHJva2Utd2lkdGg9IjI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgo8Y2lyY2xlIGN4PSIxNTAiIGN5PSIyNTYiIHI9IjYyIi8+CjxwYXRoIGQ9Ik0yMTIgMjU2IEg0MTQiLz4KPHBhdGggZD0iTTMyNiAyNTYgVjMxMiIvPjxwYXRoIGQ9Ik0zNzAgMjU2IFYyOTAiLz48cGF0aCBkPSJNNDE0IDI1NiBWMzIyIi8+CjwvZz4KPGcgc3Ryb2tlPSIjRDBBMDUwIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0xODEuMCAzMDkuMCBMMTgxLjAgMzUzLjAiLz48cGF0aCBkPSJNMTYxLjkgMzIwLjAgTDIwMC4xIDM0Mi4wIi8+PHBhdGggZD0iTTE2MS45IDM0Mi4wIEwyMDAuMSAzMjAuMCIvPjwvZz4KPC9zdmc+" alt="" width="44" height="44" />
+            <div>
+              <h1 className="shiny" key=${lang}>${t('title')}</h1>
+              <${BlurText} text=${t('subtitle')} />
+            </div>
           </div>
           <div className="lang" role="group" aria-label="Language">
             <button type="button" aria-pressed=${lang === 'en'} onClick=${() => setLang('en')}>EN</button>
@@ -624,4 +630,4 @@
 })();
 </script>
 </body>
-</html>
+  </html>
